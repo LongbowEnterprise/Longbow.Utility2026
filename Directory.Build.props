@@ -1,0 +1,30 @@
+<Project>
+
+  <PropertyGroup>
+    <Copyright>Longbow</Copyright>
+    <Authors>Argo(argo@live.ca)</Authors>
+    <Company>Longbow</Company>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\keys\Longbow.Utility.snk</AssemblyOriginatorKeyFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <RepositoryType>github</RepositoryType>
+    <RepositoryUrl>https://github.com/LongbowEnterprise/Longbow.Utility2026?wt.mc_id=DT-MVP-5004174</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/LongbowEnterprise/Longbow.Utility2026?wt.mc_id=DT-MVP-5004174</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.Diagnostics.CodeAnalysis"/>
+  </ItemGroup>
+
+</Project>
