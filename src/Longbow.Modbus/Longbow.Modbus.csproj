@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>9.1.1</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageTags>Longbow Modbus</PackageTags>
+    <Description>Longbow extensions of Modbus</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Longbow.SerialPorts" Version="9.0.2" />
+    <PackageReference Include="Longbow.TcpSocket" Version="9.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Longbow.TcpSocket" />
+  </ItemGroup>
+
+</Project>
