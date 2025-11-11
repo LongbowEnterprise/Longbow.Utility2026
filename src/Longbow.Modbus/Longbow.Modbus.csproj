@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>9.1.1</Version>
+    <Version>10.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Longbow.SerialPorts" Version="9.0.2" />
-    <PackageReference Include="Longbow.TcpSocket" Version="9.0.13" />
+    <ProjectReference Include="..\Longbow.SerialPorts\Longbow.SerialPorts.csproj" />
+    <ProjectReference Include="..\Longbow.TcpSocket\Longbow.TcpSocket.csproj" />
   </ItemGroup>
 
   <ItemGroup>
