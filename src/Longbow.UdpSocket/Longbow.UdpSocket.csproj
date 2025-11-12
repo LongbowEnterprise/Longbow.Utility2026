@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Longbow.Sockets" Version="9.0.3" />
+    <ProjectReference Include="..\Longbow.Sockets\Longbow.Sockets.csproj" />
   </ItemGroup>
 
   <ItemGroup>
