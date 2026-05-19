@@ -5,6 +5,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Reflection;
 
 namespace Longbow.Logging;
 
@@ -14,8 +15,13 @@ namespace Longbow.Logging;
 [ProviderAlias("LgbFile")]
 public class FileLoggerProvider : LoggerProvider
 {
+    private static readonly string ProviderName = typeof(FileLoggerProvider).FullName!;
+    private static readonly string? ProviderAlias = typeof(FileLoggerProvider).GetCustomAttribute<ProviderAliasAttribute>()?.Alias;
+
     private readonly IDisposable? _optionsReloadToken;
+    private readonly IDisposable? _loggerFilterReloadToken;
     private readonly IConfiguration? _config;
+    private readonly Func<string, LogLevel, bool>? _customFilter;
     private FileLoggerOptions _options;
 
     /// <summary>
@@ -30,6 +36,7 @@ public class FileLoggerProvider : LoggerProvider
     /// <param name="filter">日志过滤回调函数</param>
     public FileLoggerProvider(FileLoggerOptions options, Func<string, LogLevel, bool>? filter = null) : base(filter)
     {
+        _customFilter = filter;
         _options = options;
         _writer = new FileLoggerWriter(_options);
     }
@@ -39,15 +46,21 @@ public class FileLoggerProvider : LoggerProvider
     /// </summary>
     /// <param name="optionsMonitor"></param>
     /// <param name="configuration"></param>
-    public FileLoggerProvider(IOptionsMonitor<FileLoggerOptions> optionsMonitor, IConfiguration configuration) : this(optionsMonitor.CurrentValue)
+    /// <param name="loggerFilterOptionsMonitor"></param>
+    public FileLoggerProvider(IOptionsMonitor<FileLoggerOptions> optionsMonitor, IConfiguration configuration, IOptionsMonitor<LoggerFilterOptions> loggerFilterOptionsMonitor)
+        : this(optionsMonitor.CurrentValue)
     {
         _config = configuration;
+        UpdateFilter(loggerFilterOptionsMonitor.CurrentValue);
+
         _optionsReloadToken = optionsMonitor.OnChange(op =>
         {
             _options = op;
             _writer.Dispose();
             _writer = new FileLoggerWriter(_options);
         });
+
+        _loggerFilterReloadToken = loggerFilterOptionsMonitor.OnChange(UpdateFilter);
     }
 
     /// <summary>
@@ -58,8 +71,81 @@ public class FileLoggerProvider : LoggerProvider
     public override ILogger CreateLogger(string categoryName)
     {
         var scopeProvider = _options.IncludeScopes ? new LoggerExternalScopeProvider() : null;
-        return new FileLogger(categoryName, Filter, scopeProvider, _config, _writer.WriteMessage);
+        return new FileLogger(categoryName, (category, logLevel) => Filter?.Invoke(category, logLevel) ?? true, scopeProvider, _config, _writer.WriteMessage);
     }
+
+    private void UpdateFilter(LoggerFilterOptions options)
+    {
+        Filter = (category, logLevel) =>
+        {
+            if (_customFilter != null && !_customFilter(category, logLevel))
+            {
+                return false;
+            }
+
+            return MatchFilterRule(options, category, logLevel);
+        };
+    }
+
+    private static bool MatchFilterRule(LoggerFilterOptions options, string category, LogLevel logLevel)
+    {
+        if (logLevel == LogLevel.None)
+        {
+            return false;
+        }
+
+        var rule = SelectRule(options, category);
+        if (rule?.Filter != null)
+        {
+            return rule.Filter(ProviderName, category, logLevel);
+        }
+
+        var minLevel = rule?.LogLevel ?? options.MinLevel;
+        return logLevel >= minLevel;
+    }
+
+    private static LoggerFilterRule? SelectRule(LoggerFilterOptions options, string category)
+    {
+        LoggerFilterRule? selectedRule = null;
+        var selectedProviderSpecificity = -1;
+        var selectedCategoryLength = -1;
+
+        foreach (var rule in options.Rules)
+        {
+            if (!IsProviderMatch(rule.ProviderName) || !IsCategoryMatch(rule.CategoryName, category))
+            {
+                continue;
+            }
+
+            var providerSpecificity = string.IsNullOrEmpty(rule.ProviderName) ? 0 : 1;
+            var categoryLength = rule.CategoryName?.Length ?? 0;
+
+            if (providerSpecificity > selectedProviderSpecificity
+                || providerSpecificity == selectedProviderSpecificity && categoryLength > selectedCategoryLength
+                || providerSpecificity == selectedProviderSpecificity && categoryLength == selectedCategoryLength)
+            {
+                selectedRule = rule;
+                selectedProviderSpecificity = providerSpecificity;
+                selectedCategoryLength = categoryLength;
+            }
+        }
+
+        return selectedRule;
+    }
+
+    private static bool IsProviderMatch(string? providerName)
+    {
+        if (string.IsNullOrEmpty(providerName))
+        {
+            return true;
+        }
+
+        return string.Equals(providerName, ProviderName, StringComparison.OrdinalIgnoreCase)
+            || !string.IsNullOrEmpty(ProviderAlias) && string.Equals(providerName, ProviderAlias, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCategoryMatch(string? ruleCategory, string category) => string.IsNullOrEmpty(ruleCategory)
+        || category.StartsWith(ruleCategory, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Dispose 方法
@@ -67,10 +153,13 @@ public class FileLoggerProvider : LoggerProvider
     /// <param name="disposing"></param>
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!disposing)
         {
-            _optionsReloadToken?.Dispose();
-            _writer?.Dispose();
+            return;
         }
+
+        _loggerFilterReloadToken?.Dispose();
+        _optionsReloadToken?.Dispose();
+        _writer.Dispose();
     }
 }
