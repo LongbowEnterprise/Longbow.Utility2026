@@ -10,29 +10,21 @@ namespace Longbow.Logging;
 /// <summary>
 /// ILogger 数据库日志内部实现类
 /// </summary>
-/// <remarks>
-/// 默认构造函数
-/// </remarks>
 /// <param name="provider">IServiceProvider 实例</param>
 /// <param name="action">操作回调函数</param>
 internal class DBLogger(IServiceProvider provider, Action<IServiceProvider, EventId, Exception?, NameValueCollection> action) : ILogger
 {
-    private readonly Action<IServiceProvider, EventId, Exception?, NameValueCollection> _action = action;
-    private readonly IServiceProvider _provider = provider;
-
     /// <summary>
     /// 创建上下文作用域
     /// </summary>
     /// <typeparam name="TState"></typeparam>
     /// <param name="state"></param>
-    /// <returns></returns>
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
     /// <summary>
     /// 判断当前 logLevel 是否开启日志
     /// </summary>
     /// <param name="logLevel">LogLevel 实例</param>
-    /// <returns>开启日志时返回真</returns>
     public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None && logLevel >= LogLevel.Error;
 
     /// <summary>
@@ -52,21 +44,11 @@ internal class DBLogger(IServiceProvider provider, Action<IServiceProvider, Even
         }
 
         var nv = new NameValueCollection();
-        //var accessor = _provider.GetService(typeof(IHttpContextAccessor));
-        //if (accessor is IHttpContextAccessor httpContextAccessor)
-        //{
-        //    if (httpContextAccessor.HttpContext != null)
-        //    {
-        //        nv["ErrorPage"] = httpContextAccessor.HttpContext.Request.Path;
-        //        nv["UserIp"] = httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToIPv4String();
-        //        nv["UserId"] = httpContextAccessor.HttpContext.User.Identity?.Name;
-        //    }
-        //}
         if (state is NameValueCollection v)
         {
             nv.Add(v);
         }
 
-        _action?.Invoke(_provider, eventId, exception, nv);
+        action.Invoke(provider, eventId, exception, nv);
     }
 }
