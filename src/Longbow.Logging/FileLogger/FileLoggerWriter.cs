@@ -182,7 +182,7 @@ public class FileLoggerWriter : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private bool disposedValue;
+    private bool _disposedValue;
 
     /// <summary>
     /// Dispose 重载方法
@@ -190,19 +190,23 @@ public class FileLoggerWriter : IDisposable
     /// <param name="disposing"></param>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!disposing)
         {
-            if (!disposedValue)
-            {
-                disposedValue = true;
-
-                _messageQueue.CompleteAdding();
-                _cancellationTokenSource.Cancel();
-                _logTask.Wait(Option.TaskWaitTime);
-
-                _cancellationTokenSource.Dispose();
-                _messageQueue.Dispose();
-            }
+            return;
         }
+
+        if (_disposedValue)
+        {
+            return;
+        }
+
+        _disposedValue = true;
+
+        _messageQueue.CompleteAdding();
+        _cancellationTokenSource.Cancel();
+        _logTask.Wait(Option.TaskWaitTime);
+
+        _cancellationTokenSource.Dispose();
+        _messageQueue.Dispose();
     }
 }
