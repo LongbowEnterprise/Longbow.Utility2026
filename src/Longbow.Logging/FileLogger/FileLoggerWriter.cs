@@ -69,7 +69,7 @@ public class FileLoggerWriter : IDisposable
         while (!_cancellationTokenSource.IsCancellationRequested)
         {
             var limit = Option.BatchCount;
-            while ((force || limit > 0) && _messageQueue.TryTake(out var message))
+            while ((_force || limit > 0) && _messageQueue.TryTake(out var message))
             {
                 _currentBatch.Add(message);
                 limit--;
@@ -82,7 +82,7 @@ public class FileLoggerWriter : IDisposable
                 _flushCancellationTokenSource = new CancellationTokenSource();
 
                 // 恢复强制输出开关
-                force = false;
+                _force = false;
                 cancelSource.Dispose();
                 cancelSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token, _flushCancellationTokenSource.Token);
             }
@@ -100,7 +100,7 @@ public class FileLoggerWriter : IDisposable
             {
                 if (_flushCancellationTokenSource.IsCancellationRequested)
                 {
-                    force = true;
+                    _force = true;
                     continue;
                 }
                 break;
@@ -166,7 +166,7 @@ public class FileLoggerWriter : IDisposable
         }
     }
 
-    private bool force;
+    private bool _force;
     private CancellationTokenSource _flushCancellationTokenSource = new();
     /// <summary>
     /// 强制输出到日志文件中
@@ -182,7 +182,7 @@ public class FileLoggerWriter : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private bool disposedValue;
+    private bool _disposedValue;
 
     /// <summary>
     /// Dispose 重载方法
@@ -190,19 +190,23 @@ public class FileLoggerWriter : IDisposable
     /// <param name="disposing"></param>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!disposing)
         {
-            if (!disposedValue)
-            {
-                disposedValue = true;
-
-                _messageQueue.CompleteAdding();
-                _cancellationTokenSource.Cancel();
-                _logTask.Wait(Option.TaskWaitTime);
-
-                _cancellationTokenSource.Dispose();
-                _messageQueue.Dispose();
-            }
+            return;
         }
+
+        if (_disposedValue)
+        {
+            return;
+        }
+
+        _disposedValue = true;
+
+        _messageQueue.CompleteAdding();
+        _cancellationTokenSource.Cancel();
+        _logTask.Wait(Option.TaskWaitTime);
+
+        _cancellationTokenSource.Dispose();
+        _messageQueue.Dispose();
     }
 }

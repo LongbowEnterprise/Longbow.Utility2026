@@ -10,16 +10,10 @@ namespace Longbow.Logging;
 /// <summary>
 /// ILoggerProvider 数据库日志提供者实现类
 /// </summary>
-/// <remarks>
-/// 默认构造函数
-/// </remarks>
 /// <param name="provider">IServiceProvider 实例</param>
 /// <param name="action">异常记录操作回调函数</param>
 public class DBLoggerProvider(IServiceProvider provider, Action<IServiceProvider, EventId, Exception?, NameValueCollection> action) : ILoggerProvider
 {
-    private readonly Action<IServiceProvider, EventId, Exception?, NameValueCollection> _action = action;
-    private readonly IServiceProvider _provider = provider;
-
     /// <summary>
     /// 创建 ILogger 实例
     /// </summary>
@@ -27,7 +21,7 @@ public class DBLoggerProvider(IServiceProvider provider, Action<IServiceProvider
     /// <returns>ILogger 实例</returns>
     public ILogger CreateLogger(string categoryName)
     {
-        return new DBLogger(_provider, _action);
+        return new DBLogger(provider, action);
     }
 
     /// <summary>
@@ -41,7 +35,6 @@ public class DBLoggerProvider(IServiceProvider provider, Action<IServiceProvider
         }
     }
 
-    // This code added to correctly implement the disposable pattern.
     /// <summary>
     /// Dispose 方法
     /// </summary>
