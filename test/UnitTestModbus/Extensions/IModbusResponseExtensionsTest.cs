@@ -33,6 +33,23 @@ public class IModbusResponseExtensionsTest
     }
 
     [Fact]
+    public void Test()
+    {
+        var sc = new ServiceCollection();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+
+        var rtuBuilder = provider.GetRequiredService<IModbusRtuMessageBuilder>();
+        var rtuData = "01-03-28-00-01-00-00-00-06-00-01-3F-F6-46-1C-3F-F6-46-1C-FF-5C-C4-79-FF-5C-C4-79-00-00-00-00-00-00-00-00-00-00-00-00-4D-88-41-B2-B8-A4";
+        IModbusResponse response = new TestModbusResponse(HexConverter.ToBytes(rtuData, "-"), rtuBuilder);
+
+        var value = response.ReadFloatBADCValue(18);
+        var max = response.ReadFloatBADCValue(6);
+        var min = response.ReadFloatBADCValue(8);
+    }
+
+    [Fact]
     public void ReadBytes_Ok()
     {
         AssertBytes("01 03 04 41 B6 E6 6C BC 80", "00 01 00 00 00 07 01 03 04 41 B6 E6 6C", 0, 10, [0x41, 0xB6, 0xE6, 0x6C]);
