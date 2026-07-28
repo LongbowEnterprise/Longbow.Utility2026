@@ -85,4 +85,52 @@ public static class IModbusResponseExtensions
     /// <param name="index">float 值索引</param>
     /// <returns></returns>
     public static float ReadFloatDCBAValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 0, 1, 2, 3);
+
+    /// <summary>
+    /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 指定偏移的数据转换成字节数组
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="index">数据偏移量</param>
+    /// <param name="length">读取长度</param>
+    /// <returns></returns>
+    public static byte[] ReadBytes(this IModbusResponse response, int index, int length)
+    {
+#if NET8_0_OR_GREATER
+        ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
+#else
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+#endif
+        if (length <= 0 || response.Buffer.IsEmpty)
+        {
+            return [];
+        }
+
+        var payloadOffset = response.Builder is IModbusTcpMessageBuilder ? TcpPayloadOffset : RtuPayloadOffset;
+        if (response.Buffer.Length < payloadOffset)
+        {
+            return [];
+        }
+
+        // 得到数据字节数
+        var byteCount = response.Buffer.Span[payloadOffset - 1];
+        if (index >= byteCount)
+        {
+            return [];
+        }
+
+        var offset = payloadOffset + index;
+        var availableLength = Math.Min(length, byteCount - index);
+        var bufferLength = Math.Min(availableLength, response.Buffer.Length - offset);
+        if (bufferLength <= 0)
+        {
+            return [];
+        }
+
+        var bytes = new byte[bufferLength];
+        response.Buffer.Slice(offset, bufferLength).CopyTo(bytes);
+        return bytes;
+    }
 }

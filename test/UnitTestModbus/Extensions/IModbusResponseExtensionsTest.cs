@@ -32,6 +32,13 @@ public class IModbusResponseExtensionsTest
         AssertFloatValue("01 03 04 6C E6 B6 41 BC 80", "00 01 00 00 00 07 01 03 04 6C E6 B6 41", static response => response.ReadFloatDCBAValue());
     }
 
+    [Fact]
+    public void ReadBytes_Ok()
+    {
+        AssertBytes("01 03 04 41 B6 E6 6C BC 80", "00 01 00 00 00 07 01 03 04 41 B6 E6 6C", 0, 10, [0x41, 0xB6, 0xE6, 0x6C]);
+        AssertBytes("01 03 04 41 B6 E6 6C BC 80", "00 01 00 00 00 07 01 03 04 41 B6 E6 6C", 1, 10, [0xB6, 0xE6, 0x6C]);
+    }
+
     private static void AssertFloatValue(string rtuData, string tcpData, Func<IModbusResponse, float> reader)
     {
         var sc = new ServiceCollection();
@@ -47,6 +54,22 @@ public class IModbusResponseExtensionsTest
         var tcpBuilder = provider.GetRequiredService<IModbusTcpMessageBuilder>();
         response = new TestModbusResponse(HexConverter.ToBytes(tcpData, " "), tcpBuilder);
         Assert.Equal(expected, reader(response));
+    }
+
+    private static void AssertBytes(string rtuData, string tcpData, int index, int length, byte[] expected)
+    {
+        var sc = new ServiceCollection();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+
+        var rtuBuilder = provider.GetRequiredService<IModbusRtuMessageBuilder>();
+        IModbusResponse response = new TestModbusResponse(HexConverter.ToBytes(rtuData, " "), rtuBuilder);
+        Assert.Equal(expected, response.ReadBytes(index, length));
+
+        var tcpBuilder = provider.GetRequiredService<IModbusTcpMessageBuilder>();
+        response = new TestModbusResponse(HexConverter.ToBytes(tcpData, " "), tcpBuilder);
+        Assert.Equal(expected, response.ReadBytes(index, length));
     }
 
     sealed class TestModbusResponse(ReadOnlyMemory<byte> buffer, IModbusMessageBuilder builder) : IModbusResponse
