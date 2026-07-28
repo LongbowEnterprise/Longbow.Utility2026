@@ -1,6 +1,8 @@
-﻿// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
+// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
+
+using System.Buffers.Binary;
 
 namespace Longbow.Modbus;
 
@@ -9,6 +11,23 @@ namespace Longbow.Modbus;
 /// </summary>
 public static class IModbusResponseExtensions
 {
+    private const int TcpPayloadOffset = 9;
+    private const int RtuPayloadOffset = 3;
+
+    private static float ReadFloatValue(IModbusResponse response, int index, int byte0, int byte1, int byte2, int byte3)
+    {
+        var offset = (response.Builder is IModbusTcpMessageBuilder ? TcpPayloadOffset : RtuPayloadOffset) + (index * 4);
+        Span<byte> buffer =
+        [
+            response.Buffer.Span[offset + byte0],
+            response.Buffer.Span[offset + byte1],
+            response.Buffer.Span[offset + byte2],
+            response.Buffer.Span[offset + byte3]
+        ];
+
+        return BinaryPrimitives.ReadSingleLittleEndian(buffer);
+    }
+
     /// <summary>
     /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 转换成布尔数组
     /// </summary>
@@ -34,4 +53,36 @@ public static class IModbusResponseExtensions
             ? ModbusTcpMessageConverter.ReadUShortValues(response.Buffer, numberOfPoints)
             : ModbusRtuMessageConverter.ReadUShortValues(response.Buffer, numberOfPoints);
     }
+
+    /// <summary>
+    /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 按照 ABCD 格式转换成 <see cref="float"/>
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="index">float 值索引</param>
+    /// <returns></returns>
+    public static float ReadFloatABCDValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 3, 2, 1, 0);
+
+    /// <summary>
+    /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 按照 CDAB 格式转换成 <see cref="float"/>
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="index">float 值索引</param>
+    /// <returns></returns>
+    public static float ReadFloatCDABValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 1, 0, 3, 2);
+
+    /// <summary>
+    /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 按照 BADC 格式转换成 <see cref="float"/>
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="index">float 值索引</param>
+    /// <returns></returns>
+    public static float ReadFloatBADCValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 1, 0, 3, 2);
+
+    /// <summary>
+    /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 按照 DCBA 格式转换成 <see cref="float"/>
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="index">float 值索引</param>
+    /// <returns></returns>
+    public static float ReadFloatDCBAValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 0, 1, 2, 3);
 }
