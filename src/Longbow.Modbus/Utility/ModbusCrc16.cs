@@ -1,4 +1,4 @@
-﻿// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
+// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
@@ -98,10 +98,10 @@ public static class ModbusCrc16
     /// <returns>带 CRC 校验码的数据长度</returns>
     public static int Append(Memory<byte> buffer, int len)
     {
-        ushort crc = Compute(buffer.Span);
+        ushort crc = Compute(buffer.Span[..len]);
 
-        buffer.Span[len + 1] = (byte)(crc & 0xFF);
-        buffer.Span[len + 2] = (byte)(crc >> 8);
+        buffer.Span[len] = (byte)(crc & 0xFF);
+        buffer.Span[len + 1] = (byte)(crc >> 8);
 
         return len + 2;
     }

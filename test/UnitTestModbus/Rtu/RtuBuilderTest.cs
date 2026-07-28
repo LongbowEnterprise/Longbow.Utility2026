@@ -1,4 +1,4 @@
-﻿// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
+// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
@@ -8,6 +8,22 @@ namespace UnitTest.Rtu;
 
 public class RtuBuilderTest
 {
+    [Fact]
+    public void BuildReadRequest_Ok()
+    {
+        var sc = new ServiceCollection();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+        var builder = provider.GetRequiredService<IModbusRtuMessageBuilder>();
+        Memory<byte> buffer = new byte[16];
+
+        var len = builder.BuildReadRequest(buffer, 0x01, 0x03, 0x0012, 0x0002);
+
+        Assert.Equal(8, len);
+        Assert.Equal("010300120002640E", HexConverter.ToString(buffer[..len].Span, ""));
+    }
+
     [Fact]
     public void TryValidateReadResponse_Ok()
     {
