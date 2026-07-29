@@ -16,7 +16,7 @@ public static class IModbusResponseExtensions
 
     private static float ReadFloatValue(IModbusResponse response, int index, int byte0, int byte1, int byte2, int byte3)
     {
-        var offset = (response.Builder is IModbusTcpMessageBuilder ? TcpPayloadOffset : RtuPayloadOffset) + (index * 4);
+        var offset = (response.Builder is IModbusTcpMessageBuilder ? TcpPayloadOffset : RtuPayloadOffset) + (index * 2);
         Span<byte> buffer =
         [
             response.Buffer.Span[offset + byte0],
