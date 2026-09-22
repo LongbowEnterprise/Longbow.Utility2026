@@ -1,4 +1,4 @@
-﻿// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
+// Copyright (c) Argo Zhang (argo@live.ca). All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
@@ -26,17 +26,22 @@ static class MessageBuilder
         }
     }
 
+    public static int WriteBoolValues(Memory<byte> buffer, ushort address, bool[] values) =>
+        WriteBoolValues(buffer, address, values, false);
 
-    public static int WriteBoolValues(Memory<byte> buffer, ushort address, bool[] values)
+    public static int WriteMultipleBoolValues(Memory<byte> buffer, ushort address, bool[] values) =>
+        WriteBoolValues(buffer, address, values, true);
+
+    private static int WriteBoolValues(Memory<byte> buffer, ushort address, bool[] values, bool multiple)
     {
         int byteCount = (values.Length + 7) / 8;
-        var len = values.Length > 1 ? 5 + byteCount : 4;
+        var len = multiple ? 5 + byteCount : 4;
         var span = buffer.Span;
 
         span[0] = (byte)(address >> 8);
         span[1] = (byte)address;
 
-        if (values.Length > 1)
+        if (multiple)
         {
             // 多值时，写入数量
             span[2] = (byte)(values.Length >> 8);
@@ -65,16 +70,22 @@ static class MessageBuilder
         return len;
     }
 
-    public static int WriteUShortValues(Memory<byte> buffer, ushort address, ushort[] values)
+    public static int WriteUShortValues(Memory<byte> buffer, ushort address, ushort[] values) =>
+        WriteUShortValues(buffer, address, values, false);
+
+    public static int WriteMultipleUShortValues(Memory<byte> buffer, ushort address, ushort[] values) =>
+        WriteUShortValues(buffer, address, values, true);
+
+    private static int WriteUShortValues(Memory<byte> buffer, ushort address, ushort[] values, bool multiple)
     {
         int byteCount = values.Length * 2;
-        var len = values.Length > 1 ? 5 + byteCount : 4;
+        var len = multiple ? 5 + byteCount : 4;
         var span = buffer.Span;
 
         span[0] = (byte)(address >> 8);
         span[1] = (byte)address;
 
-        if (values.Length > 1)
+        if (multiple)
         {
             // 多值时，写入数量
             span[2] = (byte)(values.Length >> 8);

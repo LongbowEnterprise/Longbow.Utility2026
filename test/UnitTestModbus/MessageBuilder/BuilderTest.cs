@@ -25,6 +25,26 @@ public class BuilderTest
         Assert.ThrowsAny<ArgumentException>(() => ValidateData("test", new byte[] { 0x01, 0x02 }, 1));
     }
 
+    [Fact]
+    public void WriteMultipleBoolValues_OneValue()
+    {
+        var buffer = new byte[8];
+        var len = WriteValues("WriteMultipleBoolValues", buffer, 0x0012, new[] { true });
+
+        Assert.Equal(6, len);
+        Assert.Equal("001200010101", HexConverter.ToString(buffer.AsSpan(0, len), ""));
+    }
+
+    [Fact]
+    public void WriteMultipleUShortValues_OneValue()
+    {
+        var buffer = new byte[8];
+        var len = WriteValues("WriteMultipleUShortValues", buffer, 0x0012, new ushort[] { 0x1234 });
+
+        Assert.Equal(7, len);
+        Assert.Equal("00120001021234", HexConverter.ToString(buffer.AsSpan(0, len), ""));
+    }
+
     private static void ValidateNumberOfPoints(string argumentName, ushort numberOfPoints, ushort maxNumberOfPoints)
     {
         var type = Type.GetType("Longbow.Modbus.MessageBuilder, Longbow.Modbus");
@@ -58,5 +78,13 @@ public class BuilderTest
                 throw ex.InnerException;
             }
         }
+    }
+
+    private static int WriteValues<T>(string methodName, Memory<byte> buffer, ushort address, T[] values)
+    {
+        var type = Type.GetType("Longbow.Modbus.MessageBuilder, Longbow.Modbus") ?? throw new InvalidOperationException();
+        var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public) ?? throw new InvalidOperationException();
+
+        return (int)(method.Invoke(null, [buffer, address, values]) ?? throw new InvalidOperationException());
     }
 }
