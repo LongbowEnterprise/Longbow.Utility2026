@@ -48,14 +48,14 @@ abstract class ModbusClientBase(IModbusMessageBuilder builder) : IModbusClient
     {
         MessageBuilder.ValidateData(nameof(values), values, 1968);
 
-        return WriteBoolValuesAsync(slaveAddress, 0x0F, startAddress, values, token);
+        return WriteBoolValuesAsync(slaveAddress, 0x0F, startAddress, values, MessageBuilder.WriteMultipleBoolValues, token);
     }
 
     public ValueTask<IModbusResponse> WriteMultipleRegistersAsync(byte slaveAddress, ushort registerAddress, ushort[] values, CancellationToken token = default)
     {
         MessageBuilder.ValidateData(nameof(values), values, 123);
 
-        return WriteUShortValuesAsync(slaveAddress, 0x10, registerAddress, values, token);
+        return WriteUShortValuesAsync(slaveAddress, 0x10, registerAddress, values, MessageBuilder.WriteMultipleUShortValues, token);
     }
 
     private async ValueTask<IModbusResponse> ReadAsync(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints, CancellationToken token = default)
@@ -95,13 +95,16 @@ abstract class ModbusClientBase(IModbusMessageBuilder builder) : IModbusClient
         }
     }
 
-    private async ValueTask<IModbusResponse> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values, CancellationToken token = default)
+    private ValueTask<IModbusResponse> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values, CancellationToken token = default) =>
+        WriteBoolValuesAsync(slaveAddress, functionCode, address, values, MessageBuilder.WriteBoolValues, token);
+
+    private async ValueTask<IModbusResponse> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values, Func<Memory<byte>, ushort, bool[], int> writeCallback, CancellationToken token = default)
     {
         try
         {
             await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-            return await SendWriteValuesRequestAsync(slaveAddress, functionCode, address, values, MessageBuilder.WriteBoolValues, token);
+            return await SendWriteValuesRequestAsync(slaveAddress, functionCode, address, values, writeCallback, token);
         }
         finally
         {
@@ -109,13 +112,16 @@ abstract class ModbusClientBase(IModbusMessageBuilder builder) : IModbusClient
         }
     }
 
-    private async ValueTask<IModbusResponse> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values, CancellationToken token = default)
+    private ValueTask<IModbusResponse> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values, CancellationToken token = default) =>
+        WriteUShortValuesAsync(slaveAddress, functionCode, address, values, MessageBuilder.WriteUShortValues, token);
+
+    private async ValueTask<IModbusResponse> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values, Func<Memory<byte>, ushort, ushort[], int> writeCallback, CancellationToken token = default)
     {
         try
         {
             await _semaphore.WaitAsync(token).ConfigureAwait(false);
 
-            return await SendWriteValuesRequestAsync(slaveAddress, functionCode, address, values, MessageBuilder.WriteUShortValues, token);
+            return await SendWriteValuesRequestAsync(slaveAddress, functionCode, address, values, writeCallback, token);
         }
         finally
         {
