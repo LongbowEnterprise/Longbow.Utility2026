@@ -76,7 +76,7 @@ public static class IModbusResponseExtensions
     /// <param name="response"></param>
     /// <param name="index">float 值索引</param>
     /// <returns></returns>
-    public static float ReadFloatBADCValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 1, 0, 3, 2);
+    public static float ReadFloatBADCValue(this IModbusResponse response, int index = 0) => ReadFloatValue(response, index, 2, 3, 0, 1);
 
     /// <summary>
     /// 将 <see cref="IModbusResponse"/> 实例中 <see cref="IModbusResponse.Buffer"/> 按照 DCBA 格式转换成 <see cref="float"/>
