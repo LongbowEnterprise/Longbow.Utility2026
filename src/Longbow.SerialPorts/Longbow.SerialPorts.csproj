@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>10.0.0</Version>
+    <Version>11.0.0-rc.1</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,17 +21,22 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(NET10Version)" />
-    <PackageReference Include="System.IO.Ports" Version="$(NET9Version)" />
+    <PackageReference Include="System.IO.Ports" Version="$(NET8Version)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(NET10Version)" />
-    <PackageReference Include="System.IO.Ports" Version="$(NET9Version)" />
+    <PackageReference Include="System.IO.Ports" Version="$(NET10Version)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Microsoft.Extensions.Options" Version="$(NET10Version)" />
     <PackageReference Include="System.IO.Ports" Version="$(NET10Version)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
+    <PackageReference Include="Microsoft.Extensions.Options" Version="$(NET11Version)" />
+    <PackageReference Include="System.IO.Ports" Version="$(NET11Version)" />
   </ItemGroup>
 
 </Project>

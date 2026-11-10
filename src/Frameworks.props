@@ -1,13 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <NET8Version>8.0.*</NET8Version>
-    <NET9Version>9.0.*</NET9Version>
-    <NET10Version>10.0.*</NET10Version>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
   </PropertyGroup>
 
 </Project>
